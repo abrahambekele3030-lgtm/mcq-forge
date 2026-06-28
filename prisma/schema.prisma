@@ -1,0 +1,80 @@
+// mcq-forge — Prisma schema
+// SQLite for free-tier Render deployment. Upgrade to Postgres by changing the
+// datasource provider and DATABASE_URL.
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "sqlite"
+  url      = env("DATABASE_URL")
+}
+
+model Job {
+  id            String   @id @default(cuid())
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+
+  // User inputs
+  grade         String
+  subject       String
+  unitNumber    Int
+  pdfFilename   String
+  pdfPath       String   // path to the uploaded PDF on disk (uploads/ dir)
+
+  // Status
+  status        String   @default("queued") // queued | extracting | detecting_structure | awaiting_structure_review | generating | completed | failed | cancelled
+  errorMessage  String?
+  progress      Float    @default(0) // 0..1
+
+  // Pipeline artifacts
+  structureJson String?  // JSON-serialized Structure (set after detection)
+  structureApproved Boolean @default(false)
+  stateJson     String?  // latest __STATE__ JSON (after each round)
+  previousHash  String   @default("INITIAL")
+
+  // Counts
+  currentRound  Int      @default(0)
+  totalRounds   Int      @default(0)
+  totalQuestions Int     @default(0)
+
+  // Termination flags
+  exhausted     Boolean  @default(false)
+  userStopped   Boolean  @default(false)
+  safetyLimit   Boolean  @default(false)
+
+  // Token accounting
+  inputTokens   Int      @default(0)
+  outputTokens  Int      @default(0)
+  totalTokens   Int      @default(0)
+
+  // Resume cursor
+  startRound    Int      @default(1)
+
+  rounds        RoundArtifact[]
+  events        JobEvent[]
+}
+
+model RoundArtifact {
+  id        String   @id @default(cuid())
+  jobId     String
+  job       Job      @relation(fields: [jobId], references: [id], onDelete: Cascade)
+  round     Int
+  roundId   String   // R01, R02, ...
+  filePath  String   // path to the R{n}.json file on disk
+  questionCount Int  @default(0)
+  jsonSize  Int      @default(0)
+  createdAt DateTime @default(now())
+
+  @@unique([jobId, round])
+}
+
+model JobEvent {
+  id        String   @id @default(cuid())
+  jobId     String
+  job       Job      @relation(fields: [jobId], references: [id], onDelete: Cascade)
+  createdAt DateTime @default(now())
+  type      String   // round_start, question_ok, round_complete, ...
+  payload   String?  // JSON-serialized event detail
+}
