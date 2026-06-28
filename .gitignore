@@ -1,0 +1,57 @@
+# dependencies
+node_modules/
+/.pnp
+.pnp.*
+.yarn/*
+
+# next.js
+/.next/
+/out/
+/build/
+
+# production
+*.tsbuildinfo
+next-env.d.ts
+
+# misc
+.DS_Store
+*.pem
+
+# debug
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+pnpm-debug.log*
+
+# env files (NEVER commit secrets)
+.env
+.env.*
+!.env.example
+
+# prisma / database
+/db/*.db
+/db/*.db-journal
+*.db
+*.db-journal
+
+# mcq-forge runtime artifacts
+/uploads/
+/outputs/
+/download/
+
+# logs
+*.log
+dev.log
+server.log
+
+# editor / OS
+.vscode/
+.idea/
+*.swp
+*.swo
+Thumbs.db
+
+# agent / sandbox artifacts
+.agent-browser/
+worklog.md
+caddy.log
