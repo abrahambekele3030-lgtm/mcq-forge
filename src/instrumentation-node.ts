@@ -12,6 +12,7 @@
  *   2. Start the in-process job worker (resilient to transient DB errors).
  */
 import { execFileSync } from 'node:child_process'
+import path from 'node:path'
 
 export async function registerNode(): Promise<void> {
   // --- 1. Ensure the database schema exists ------------------------------
@@ -20,8 +21,11 @@ export async function registerNode(): Promise<void> {
   // always exist. Idempotent: if they already exist, it's a fast no-op.
   if (process.env.MCQFORGE_SKIP_AUTO_MIGRATE !== 'true') {
     try {
+      // Prefer the locally installed Prisma CLI (works with npm/node/bun).
+      // Falls back to the PATH if the local binary isn't found.
+      const prismaBin = path.join(process.cwd(), 'node_modules', '.bin', 'prisma')
       console.log('[mcq-forge] ensuring database schema exists (prisma db push)...')
-      execFileSync('bunx', ['prisma', 'db', 'push', '--accept-data-loss', '--skip-generate'], {
+      execFileSync(prismaBin, ['db', 'push', '--accept-data-loss', '--skip-generate'], {
         stdio: ['ignore', 'pipe', 'pipe'],
         timeout: 60_000,
         env: process.env,
@@ -29,9 +33,9 @@ export async function registerNode(): Promise<void> {
       console.log('[mcq-forge] database schema is in sync')
     } catch (err) {
       // Don't crash the whole app if migration fails — the worker will retry
-      // and the user can run `bun run db:push` manually.
+      // and the user can run `npm run db:push` manually.
       console.error('[mcq-forge] WARNING: prisma db push failed:', err instanceof Error ? err.message : String(err))
-      console.error('[mcq-forge] The app will still boot. Run `bun run db:setup` to create tables.')
+      console.error('[mcq-forge] The app will still boot. Run `npm run db:push` to create tables.')
     }
   }
 

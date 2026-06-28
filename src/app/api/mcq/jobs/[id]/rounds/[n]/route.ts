@@ -22,6 +22,13 @@ export async function GET(
   })
   if (!artifact) return NextResponse.json({ error: 'Round not found' }, { status: 404 })
   const txt = await fs.readFile(artifact.filePath, 'utf8')
-  const data = JSON.parse(txt)
-  return NextResponse.json(data)
+  
+  return new NextResponse(txt, {
+    status: 200,
+    headers: {
+      'Content-Type': 'application/json',
+      'Content-Disposition': `attachment; filename="R${String(round).padStart(2, '0')}.json"`,
+      'Cache-Control': 'no-store',
+    },
+  })
 }

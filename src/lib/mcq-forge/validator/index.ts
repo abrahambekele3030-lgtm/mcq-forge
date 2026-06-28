@@ -78,7 +78,7 @@ export function validateRoundFile(raw: unknown): RoundFileValidation {
   }
   const round = parsed.data
   for (let i = 0; i < round.questions.length; i++) {
-    const v = validateQuestion(round.questions[i])
+    const v = validateQuestionFull(round.questions[i])
     if (!v.ok) {
       errors.push(`questions[${i}] (${round.questions[i].question_id}):`)
       errors.push(...v.allErrors.map((e) => `  - ${e}`))

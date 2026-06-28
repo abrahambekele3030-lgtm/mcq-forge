@@ -24,22 +24,23 @@ fi
 # On Render, the web service can boot before Postgres accepts connections.
 echo "[db:setup] waiting for database to accept connections..."
 for i in $(seq 1 30); do
-  if bunx prisma db execute --schema prisma/schema.prisma --stdin <<< "SELECT 1;" >/dev/null 2>&1; then
-    echo "[db:setup] database is reachable."
-    break
-  fi
-  echo "[db:setup] attempt $i/30: database not ready yet, retrying in 1s..."
-  sleep 1
-  if [ "$i" -eq 30 ]; then
-    echo "[db:setup] WARNING: could not confirm database reachability after 30s."
-    echo "[db:setup] Continuing anyway — prisma db push will retry."
-  fi
-done
+    if npx prisma db execute --schema prisma/schema.prisma --stdin <<< "SELECT 1;" >/dev/null 2>&1; then
+      echo "[db:setup] database is reachable."
+      break
+    fi
+    echo "[db:setup] attempt $i/30: database not ready yet, retrying in 1s..."
+    sleep 1
+    if [ "$i" -eq 30 ]; then
+      echo "[db:setup] WARNING: could not confirm database reachability after 30s."
+      echo "[db:setup] Continuing anyway — prisma db push will retry."
+    fi
+  done
 
-# Push the schema (creates tables if missing, alters if changed).
-# --accept-data-loss: only applied if a column type change would lose data;
-#   for fresh databases this is a no-op.
-echo "[db:setup] running prisma db push..."
-bunx prisma db push --accept-data-loss --skip-generate
+  # Push the schema (creates tables if missing, alters if changed).
+  # --accept-data-loss: only applied if a column type change would lose data;
+  #   for fresh databases this is a no-op.
+  echo "[db:setup] running prisma db push..."
+  npx prisma db push --accept-data-loss --skip-generate
 
-echo "[db:setup] done. Schema is in sync."
+  echo "[db:setup] done. Schema is in sync."
+

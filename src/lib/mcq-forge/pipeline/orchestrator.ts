@@ -346,23 +346,15 @@ async function generateBatch(
       })
       lastBadResponse = result.content
 
-      const v = validateQuestionFull(safeJsonParse(result.content))
-      if (v.ok && v) {
+      const qObj = safeJsonParse(result.content) as any
+      if (qObj && typeof qObj === 'object') {
         // Force the question_id to the canonical one (in case the LLM drifted)
-        const parsed = v
-         
-        const qObj = safeJsonParse(result.content) as any
-        if (qObj && qObj.question_id !== questionId) {
-          qObj.question_id = questionId
-        }
-        // Re-validate after the ID fix
-        const recheck = validateQuestionFull(qObj)
-        if (recheck.ok) {
-          question = recheck.allErrors.length === 0 ? (qObj as Question) : null
-        }
-        if (!question && parsed.ok) {
-          question = qObj as Question
-        }
+        qObj.question_id = questionId
+      }
+
+      const v = validateQuestionFull(qObj)
+      if (v.ok) {
+        question = qObj as Question
       }
       if (question) {
         questions.push(question)
